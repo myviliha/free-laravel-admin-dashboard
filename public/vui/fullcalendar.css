@@ -1,0 +1,302 @@
+/* FullCalendar, wearing this design system's tokens.
+ *
+ * **This lived in `apps/web/free-react/app/calendar.css` and nowhere else**, which is the third time
+ * that shape of bug has come up: the typeface, the map's land colour, and now this. FullCalendar
+ * renders its own markup and there is no `className` to hand a day cell or a toolbar button, so the
+ * only way to theme it is a stylesheet against its `.fc-*` classes. Any edition that draws a calendar
+ * needs this file, so it belongs to the design system rather than to whichever app got there first
+ * (`PD-135`).
+ *
+ * Not part of `theme.css`: that is the token layer every consumer imports, and a consumer with no
+ * calendar should not download two hundred lines of `.fc-*` rules. Imported explicitly by the apps
+ * that render one.
+ */
+/* FullCalendar, dressed in this design system.
+ *
+ * Ported from the reference's own `.fc-*` block rather than guessed at, with one substitution
+ * throughout: their palette names become our tokens, so the calendar follows a retheme like
+ * everything else. `gray-50`/`gray-100` are `--muted`, `gray-200` is `--border`, `brand-500` is
+ * `--primary` since `PD-072`, and their four event levels land on the four state colours `PD-066`
+ * added. A calendar hardcoding `#465fff` would be the one screen a buyer cannot rebrand.
+ *
+ * It is a stylesheet rather than props because FullCalendar renders its own DOM: there is no
+ * `className` to pass for a day cell or a toolbar button, so the only way in is by its class names.
+ */
+
+/* The grid scrolls sideways rather than squeezing: a month at 718px is the narrowest it stays
+ * readable, and below that a horizontal scroll beats seven unreadable columns. */
+.fc .fc-view-harness {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.fc-dayGridMonth-view.fc-view.fc-daygrid {
+  min-width: 718px;
+}
+
+/* Their scrollgrid drops its outer rules so the card's own border is the only frame. */
+.fc .fc-scrollgrid-section > * {
+  border-right-width: 0;
+  border-bottom-width: 0;
+}
+.fc .fc-scrollgrid {
+  border-left-width: 0;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 0;
+}
+@media (min-width: 640px) {
+  .fc .fc-toolbar.fc-header-toolbar {
+    flex-direction: row;
+  }
+}
+
+/* Prev and next: 40px bordered squares. FullCalendar's own chevrons are hidden and ours are drawn
+ * with a border, so they inherit `currentColor` and need no per-scheme data URI, which is how the
+ * reference does it and why theirs needs four. */
+.fc-button-group {
+  gap: 0.5rem;
+}
+.fc-button-group .fc-button {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border);
+  background: transparent;
+  box-shadow: none !important;
+  color: var(--muted-foreground);
+}
+/*
+ * Hover, pressed and focused, all three at `.fc` depth on purpose.
+ *
+ * **FullCalendar injects its own stylesheet at runtime**, so on equal specificity it is the later
+ * sheet and it wins. `.fc-button-primary:hover` and `.fc-button-primary:not(:disabled):active` are
+ * both 0,3,0, which is exactly what `.fc-button-group .fc-button:hover` was: the tie went to them,
+ * and the button turned `#1a252f` navy with white text the moment it was touched. Hover kept our
+ * background and lost `color`, which put a white chevron on a near-white `--muted` fill and made the
+ * arrow disappear. `.fc` in front is 0,4,0 and settles it without another `!important`.
+ *
+ * Every state names background, colour AND border, because inheriting two of the three from a
+ * library's default palette is how the navy got in.
+ *
+ * Pressed shares hover's values rather than getting a darker one: `--accent` and `--muted` are the
+ * same colour in both schemes, and no button in this design system has a pressed background, so a
+ * third shade here would be a convention that exists on one calendar. It still needs its own
+ * selector, because Space and Enter fire `:active` with no `:hover` to fall back on.
+ */
+.fc .fc-button-group .fc-button:hover,
+.fc .fc-button-group .fc-button:not(:disabled):active {
+  border-color: var(--border);
+  background: var(--muted);
+  color: var(--foreground);
+}
+/*
+ * `.fc .fc-button:focus{box-shadow:...;outline:0}` is theirs, so keyboard focus landed on a toolbar
+ * button and showed nothing at all: their box-shadow is killed by the `box-shadow: none !important`
+ * above, and the outline they zeroed was never replaced. The ring is the design system's `--ring`, so
+ * it matches every other focusable control on the page.
+ *
+ * `:not(:disabled)` is here for specificity, not for behaviour. Their rule is 0,3,0 and so was this
+ * one, which left the winner decided by which stylesheet loaded last: theirs is injected at runtime
+ * by `@fullcalendar/core` and ours is a build-time import, so the order is a bundler's decision
+ * rather than ours. 0,4,0 settles it in every edition.
+ */
+.fc .fc-button:not(:disabled):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.fc-button-group .fc-button .fc-icon {
+  display: none;
+}
+.fc-button-group .fc-button::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+}
+.fc-button-group .fc-button.fc-prev-button::before {
+  transform: rotate(-135deg);
+}
+.fc-button-group .fc-button.fc-next-button::before {
+  transform: rotate(45deg);
+}
+
+/* Add Event: the one filled button on the page, so it is the brand. */
+.fc-addEventButton-button {
+  border-radius: var(--radius) !important;
+  border: 0 !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  padding: 0.625rem 1rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+.fc-addEventButton-button:hover {
+  opacity: 0.9;
+}
+
+.fc-toolbar-title {
+  font-size: 1.125rem !important;
+  font-weight: 500 !important;
+  color: var(--foreground);
+}
+
+/* The view switcher is the same segmented control the dashboard's tabs are. */
+.fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child {
+  border-radius: var(--radius);
+  background: var(--muted);
+  padding: 0.125rem;
+}
+.fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button {
+  height: auto !important;
+  width: auto !important;
+  border: 0 !important;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  padding: 0.5rem 1.25rem !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  box-shadow: none !important;
+}
+.fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button::before {
+  content: none;
+}
+/* The inactive views answered nothing on hover: their selector is already 0,4,0, so FullCalendar's
+ * navy lost here, and nothing replaced it. A segmented control has to say which segment is under the
+ * pointer. */
+.fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button:not(.fc-button-active):hover {
+  background: var(--card);
+  color: var(--foreground);
+}
+.fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button.fc-button-active {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.fc-theme-standard th {
+  border-left-width: 0 !important;
+  border-right-width: 0 !important;
+  border-top: 1px solid var(--border);
+  border-color: var(--border) !important;
+  background: var(--muted);
+  text-align: left !important;
+}
+.fc-theme-standard td,
+.fc-theme-standard .fc-scrollgrid {
+  border-color: var(--border) !important;
+}
+.fc .fc-col-header-cell-cushion {
+  padding: 1rem 1.25rem !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.fc .fc-daygrid-day {
+  padding: 0.5rem;
+}
+/* Today is a tinted cell rather than FullCalendar's yellow wash. */
+.fc .fc-daygrid-day.fc-day-today {
+  background: transparent;
+}
+.fc .fc-daygrid-day.fc-day-today .fc-scrollgrid-sync-inner {
+  border-radius: calc(var(--radius) - 4px);
+  background: var(--muted);
+}
+.fc .fc-daygrid-day-number {
+  padding: 0.75rem !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+.fc .fc-daygrid-day-top {
+  flex-direction: row !important;
+}
+/* Days from the neighbouring month stay legible, just quieter. FullCalendar dims the whole cell to
+ * 30% opacity, which makes them unreadable rather than secondary. */
+.fc .fc-day-other .fc-daygrid-day-top {
+  opacity: 1;
+}
+.fc .fc-day-other .fc-daygrid-day-top .fc-daygrid-day-number {
+  color: var(--muted-foreground);
+}
+
+/* An event is a tinted pill with a coloured bar down its leading edge. */
+.event-fc-color {
+  border-radius: var(--radius);
+  padding: 0.625rem 0.75rem 0.625rem 1rem;
+}
+.event-fc-color .fc-event-title {
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--foreground);
+}
+.fc-daygrid-event-dot {
+  width: 0.25rem;
+  height: 1.25rem;
+  margin: 0 0.75rem 0 0;
+  border: none;
+  border-radius: calc(var(--radius) - 6px);
+}
+.fc-event {
+  box-shadow: none;
+}
+.fc-daygrid-event.fc-event-start {
+  margin-left: 0.75rem !important;
+}
+.custom-calendar .fc-h-event {
+  background-color: transparent;
+  border: none;
+}
+
+/* The four levels, on the four state tokens rather than four hardcoded blues and greens. */
+.event-fc-color.fc-bg-primary {
+  background: color-mix(in srgb, var(--primary) 10%, var(--card));
+}
+.event-fc-color.fc-bg-primary .fc-daygrid-event-dot {
+  background: var(--primary);
+}
+.event-fc-color.fc-bg-success {
+  background: color-mix(in srgb, var(--success) 12%, var(--card));
+}
+.event-fc-color.fc-bg-success .fc-daygrid-event-dot {
+  background: var(--success);
+}
+.event-fc-color.fc-bg-danger {
+  background: color-mix(in srgb, var(--destructive) 10%, var(--card));
+}
+.event-fc-color.fc-bg-danger .fc-daygrid-event-dot {
+  background: var(--destructive);
+}
+.event-fc-color.fc-bg-warning {
+  background: color-mix(in srgb, var(--warning) 12%, var(--card));
+}
+.event-fc-color.fc-bg-warning .fc-daygrid-event-dot {
+  background: var(--warning);
+}
+
+/* The week and day views' time gutter. */
+.fc-direction-ltr .fc-timegrid-slot-label-frame {
+  padding: 0.375rem 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+.fc .fc-timegrid-axis-cushion {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}

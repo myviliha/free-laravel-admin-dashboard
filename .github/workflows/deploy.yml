@@ -1,0 +1,84 @@
+# Render the Blade views to static HTML and publish them to GitHub Pages at
+# https://laravel.viliha.com.
+#
+# **A PHP application, deployed as files.** Every one of the nineteen routes is a `Route::view`: Blade
+# renders a template and nothing else, so the response is the same every time and there is nothing for
+# PHP to decide at request time. `scripts/export-static.mjs` boots `php artisan serve`, asks it for
+# each route in `routes/web.php`, and writes what Blade returns.
+#
+# That is why PHP is installed in a job that publishes static files: the HTML is Blade's own output,
+# rendered by the same views a buyer downloads and runs. It is not a second copy of the markup.
+#
+# A pull request runs the checks and the export and stops there. `main` deploys.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # So a deploy can be re-run from the Actions tab without an empty commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  # Pages authenticates the artifact upload with OIDC rather than a token.
+  id-token: write
+
+# One deploy at a time, and the newest wins. `cancel-in-progress: false` because cancelling a
+# half-finished deploy is how a site ends up serving one build's HTML with another's assets.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          # `composer.json` requires ^8.2; this is the version the demo is developed against.
+          php-version: "8.3"
+          # `mbstring` and `dom` are Laravel's own floor, and `fileinfo` is what the view compiler wants.
+          extensions: mbstring, dom, fileinfo
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # `--no-dev` because nothing in the export needs the test tooling, and the lockfile is committed
+      # so this resolves to the tree the export was verified against.
+      - run: composer install --no-interaction --no-progress --prefer-dist --no-dev
+
+      # The route table against the Blade views, both directions, plus the assets the layout links.
+      # No install needed: it is Node's standard library.
+      - run: npm test
+
+      - run: php artisan key:generate
+
+      - run: npm run build
+
+      - if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+        with:
+          # Creates the Pages site and sets its source to GitHub Actions on the first run. Without it
+          # the step fails with `Get Pages site failed ... Not Found`, because the action only *reads*
+          # the configuration and a repository where nobody opened Settings -> Pages has none.
+          enablement: true
+
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # `dist/CNAME` is written by the export, and has to ship: Pages re-reads the custom domain on
+          # every deploy, so a build without it drops the domain.
+          path: dist
+
+      - id: deploy
+        if: github.event_name != 'pull_request'
+        uses: actions/deploy-pages@v4

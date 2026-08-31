@@ -1,0 +1,143 @@
+/**
+ * The free demo's own look: the layer every free edition shares and no paid edition wants.
+ *
+ * **This was duplicated in two apps and unreachable from a third** (`PD-140`). `--vui-card-radius`
+ * and the icon-chip opt-out were declared identically in `apps/web/free-react/app/globals.css` and
+ * `apps/web/free-vue/src/styles.css`, and in neither package. Two consequences, and the second is the
+ * one that mattered: the copies could drift, and the HTML edition could never have them at all,
+ * because its pages are a static export that carries `vui.css` and nothing a Next app declares
+ * locally.
+ *
+ * That is the fifth time a shared thing turned out to live in one app, after the typeface (`PD-120`),
+ * the map colour (`PD-130`), the calendar stylesheet (`PD-135`) and the row-action classes
+ * (`PD-136`). The tell each time was the same: an edition that renders from the design system alone
+ * looked wrong, and the design system did not contain the thing.
+ *
+ * **Not merged into `theme.css`, deliberately.** These are the free demo's choices, not the design
+ * system's defaults: `apps/web/reactjs` and `apps/web/vuejs` declare neither, so folding them in
+ * would silently restyle both paid editions to match a demo. A separate file that a free edition
+ * links is the difference between a default and a decision.
+ */
+
+:root {
+  /* The icon chip off, product-wide. `theme.css` ships `.plain-icons` for the same job scoped to a
+     subtree; a whole edition that never wants the chip sets it once here instead of putting a class
+     on every container. */
+  --vui-icon-chip-border: none;
+  --vui-icon-chip-padding: 0;
+
+  /* Cards are 16px while buttons and menu rows stay at 8px, so this is not the global radius: one
+     token for the card, and `--radius` left alone. */
+  --vui-card-radius: 1rem;
+}
+
+[data-slot="card"] {
+  border-radius: var(--vui-card-radius);
+}
+
+/*
+ * The collapsed rail, for the edition with no framework (`PD-158`).
+ *
+ * **Why CSS and not a second sidebar.** The React shell renders two different trees for expanded and
+ * collapsed, and a static export contains only the one it rendered. Emitting both, the way the modals
+ * and menus are handled, measured at 27 kB of markup per page: 506 kB across the nineteen, on a
+ * product whose whole promise is a folder of files you can open. The rail is a presentation change,
+ * so it is presented rather than duplicated.
+ *
+ * **`font-size: 0` is doing real work here and is not a hack looking for a home.** The shell renders
+ * a leaf row's label as a bare text node, with no element around it, so there is nothing for a
+ * selector to hide. Zeroing the row's font hides the text and leaves the icons alone, because every
+ * icon is sized in `rem` by a `size-*` class rather than in `em`. Anything this rail shows sets its
+ * own size back.
+ *
+ * **Every rule here is `!important`, and that was measured rather than assumed.** Without it the
+ * width lost to the inline one the shell writes from its layout config, and the rest lost to the
+ * utility classes on the same elements: the first attempt collapsed the column to 90px and left every
+ * label, expander and wordmark in place, which is the `PD-152` failure of working and looking broken.
+ *
+ * The one honest difference from the running editions: their rail opens a group in a floating panel
+ * built by the dropdown component, and this opens the submenu already in the markup, moved beside the
+ * rail. Same affordance, same contents, and no second copy of either.
+ */
+[data-vui-collapsed] aside {
+  width: 90px !important;
+  /* A flyout leaves the column, and `overflow-y: auto` would cut it off. */
+  overflow: visible !important;
+}
+
+[data-vui-collapsed] aside nav {
+  padding-inline: 0.75rem !important;
+}
+
+[data-vui-collapsed] aside nav a,
+[data-vui-collapsed] aside nav button {
+  justify-content: center !important;
+  padding-inline: 0 !important;
+  font-size: 0 !important;
+}
+
+/* The expander an expanded row carries. A rail row opens its group by being clicked. */
+[data-vui-collapsed] aside nav > div > ul > li > button > svg:last-child {
+  display: none !important;
+}
+
+/* The group heading becomes the three dots the running editions show. */
+[data-vui-collapsed] aside nav > div > p {
+  font-size: 0 !important;
+  text-align: center !important;
+}
+[data-vui-collapsed] aside nav > div > p::after {
+  content: "···";
+  font-size: 0.75rem;
+}
+
+/* The brand keeps its mark and drops the wordmark. */
+[data-vui-collapsed] aside > div:first-child {
+  justify-content: center !important;
+  padding-inline: 0.75rem !important;
+}
+[data-vui-collapsed] aside > div:first-child span {
+  font-size: 0 !important;
+}
+
+/* The promo card, and the sidebar search on the layouts that have one. */
+[data-vui-collapsed] aside nav > [data-slot="card"],
+[data-vui-collapsed] aside > div.relative:has(input[type="search"]) {
+  display: none !important;
+}
+
+/* A group's submenu, beside the rail rather than under the icon. */
+[data-vui-collapsed] aside nav > div > ul > li {
+  position: relative !important;
+}
+[data-vui-collapsed] aside nav li > div[id^="submenu-"] {
+  position: absolute !important;
+  top: 0 !important;
+  left: 100% !important;
+  z-index: 200 !important;
+  width: 14rem !important;
+  margin-left: 0.5rem !important;
+  display: block !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  background: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  padding: 0.375rem !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+}
+[data-vui-collapsed] aside nav li > div[id^="submenu-"][aria-hidden="true"] {
+  display: none !important;
+}
+[data-vui-collapsed] aside nav li > div[id^="submenu-"] > div {
+  overflow: visible !important;
+}
+/* The vertical rule an expanded submenu draws down its left edge. A flyout is a panel with a border
+   of its own, and the running editions' rail flyout has no rule, so it goes. */
+[data-vui-collapsed] aside nav li > div[id^="submenu-"] span[aria-hidden="true"] {
+  display: none !important;
+}
+[data-vui-collapsed] aside nav li > div[id^="submenu-"] a {
+  justify-content: flex-start !important;
+  padding-inline: 0.625rem !important;
+  font-size: 0.875rem !important;
+}

@@ -1,0 +1,15 @@
+# Laravel's own two: the framework is a dependency rather than vendored, and the environment file
+# holds a generated APP_KEY.
+/vendor/
+.env
+.env.backup
+
+# The static export, written by `npm run build` for GitHub Pages.
+/dist/
+
+# Anchored, all of them: an unanchored rule matches a directory of that name at any depth.
+/node_modules/
+/public/build/
+/public/hot
+/storage/*.key
+.DS_Store

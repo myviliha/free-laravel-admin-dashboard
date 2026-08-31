@@ -1,0 +1,13 @@
+{
+  "name": "free-laravel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The free VuiAdmin admin dashboard, in Laravel: nineteen Blade pages on the same design system as the paid editions.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "php artisan serve --port=3000",
+    "build": "node scripts/export-static.mjs",
+    "test": "node scripts/check.mjs"
+  }
+}
