@@ -42,7 +42,12 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          # `composer.json` requires ^8.2; this is the version the demo is developed against.
+          # **Deliberately not the newest.** `composer.json` requires `^8.2`, and the point of running
+          # CI a version or two below the latest is that it is the only thing that proves the floor is
+          # real. The lockfile is resolved against `config.platform.php = 8.2.0` for the same reason:
+          # without it, `composer install` locks whatever the machine that last ran it happened to
+          # have, and this build failed exactly that way — the lock had Symfony 8.1 packages needing
+          # PHP >= 8.4.1 while composer.json advertised 8.2.
           php-version: "8.3"
           # `mbstring` and `dom` are Laravel's own floor, and `fileinfo` is what the view compiler wants.
           extensions: mbstring, dom, fileinfo
@@ -55,6 +60,10 @@ jobs:
       # `--no-dev` because nothing in the export needs the test tooling, and the lockfile is committed
       # so this resolves to the tree the export was verified against.
       - run: composer install --no-interaction --no-progress --prefer-dist --no-dev
+
+      # The guard for the failure above: every installed package's platform requirement, checked
+      # against the PHP actually running, rather than against the resolver's pretend platform.
+      - run: composer check-platform-reqs --no-dev
 
       # The route table against the Blade views, both directions, plus the assets the layout links.
       # No install needed: it is Node's standard library.
