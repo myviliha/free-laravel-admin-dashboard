@@ -69,8 +69,12 @@ jobs:
       # No install needed: it is Node's standard library.
       - run: npm test
 
-      - run: php artisan key:generate
-
+      # **No `php artisan key:generate` step.** It was here and it was the reason this build failed:
+      # `.env` is gitignored, so on a fresh checkout the command has no file to write to and dies with
+      # `Failed to open stream`. `scripts/export-static.mjs` already copies `.env.example`, generates a
+      # key when there is none, and creates the storage directories Laravel refuses to boot without,
+      # because the same three things are needed by anyone running the export locally. Doing it in the
+      # workflow as well meant two places to keep in step, and the workflow's copy was the broken one.
       - run: npm run build
 
       - if: github.event_name != 'pull_request'
