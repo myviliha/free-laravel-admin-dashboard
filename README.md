@@ -140,6 +140,18 @@ Pro is optional and additive: net-new work, not a fence around what is here.
 Requires **PHP 8.2+** and **Composer**.
 
 ```bash
+npx @viliha/free-admin-dashboard my-app --laravel
+cd my-app
+composer install
+php artisan key:generate
+php artisan serve --port=3000
+```
+
+The scaffolder writes your `.env` for you. Then open [http://localhost:3000](http://localhost:3000).
+
+Prefer to clone the repository, history and all?
+
+```bash
 git clone git@github.com:myviliha/free-laravel-admin-dashboard.git
 cd free-laravel-admin-dashboard
 composer install
@@ -147,8 +159,6 @@ cp .env.example .env
 php artisan key:generate
 php artisan serve
 ```
-
-Then open [http://localhost:3000](http://localhost:3000).
 
 ### Scripts
 
