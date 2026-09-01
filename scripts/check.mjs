@@ -46,8 +46,40 @@ for (const path of [
 }
 
 // The assets the layout links. A missing stylesheet is nineteen pages of unstyled HTML.
-for (const asset of ["vui.css", "free-demo.css", "vui.js", "icon.png"]) {
+for (const asset of ["vui.css", "vui-pages.css", "free-demo.css", "vui.js", "icon.png"]) {
   if (!existsSync(join(ROOT, "public", "vui", asset))) problems.push(`public/vui/${asset} is missing`);
+}
+
+/**
+ * **Every class in the Blade markup has a rule in the stylesheets these pages link.**
+ *
+ * `vui.css` is compiled by the design system package against its own components. These pages are an
+ * export of an *application*, and its markup carries layout classes the component library never
+ * mentions. Tailwind emits only what it can see, so 142 classes here had no rule at all, `grid-cols-12`
+ * and `xl:col-span-7` among them. That is what `vui-pages.css` is for, and this is what keeps it in
+ * step: add a class to a view without regenerating the sheet and the page still renders, still
+ * deploys, and quietly loses its layout.
+ */
+const SEMANTIC = /^(?:rdp-|apexcharts-|fc-|vui-)|^(?:group|peer)\//;
+const cssEscape = (token) => token.replace(/[\\.:[\]()/%#,!<>'"&*+~=@^|$?{};]/g, (ch) => "\\" + ch);
+
+const styles = ["vui.css", "vui-pages.css", "free-demo.css", "fullcalendar.css"]
+  .map((f) => join(ROOT, "public", "vui", f))
+  .filter((f) => existsSync(f))
+  .map((f) => readFileSync(f, "utf8"))
+  .join("\n");
+
+for (const file of readdirSync(join(VIEWS, "vui-pages"))) {
+  const markup = readFileSync(join(VIEWS, "vui-pages", file), "utf8");
+  const used = new Set();
+  // Literal class attributes only. A `{{ ... }}` interpolation is an expression, not a class name.
+  for (const [, list] of markup.matchAll(/class="([^"{}]*)"/g)) {
+    for (const token of list.split(/\s+/)) if (token) used.add(token);
+  }
+  const missing = [...used].filter((c) => !SEMANTIC.test(c) && !styles.includes(`.${cssEscape(c)}`));
+  if (missing.length) {
+    problems.push(`${file}: ${missing.length} class(es) with no rule in public/vui — ${missing.join(", ")}`);
+  }
 }
 
 if (problems.length) {

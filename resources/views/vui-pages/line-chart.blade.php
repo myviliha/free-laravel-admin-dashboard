@@ -11,6 +11,7 @@
     <meta name="description" content="Line Chart — the free VuiAdmin admin dashboard for Laravel: nineteen Blade pages, MIT licensed." />
     <link rel="icon" href="{{ asset('vui/icon.png') }}" sizes="512x512" type="image/png" />
     <link rel="stylesheet" href="{{ asset('vui/vui.css') }}" />
+    <link rel="stylesheet" href="{{ asset('vui/vui-pages.css') }}" />
     <link rel="stylesheet" href="{{ asset('vui/free-demo.css') }}" />
     <script src="{{ asset('vui/vui.js') }}" defer></script>
     <script src="{{ asset('vui/vui-charts.js') }}" defer></script>

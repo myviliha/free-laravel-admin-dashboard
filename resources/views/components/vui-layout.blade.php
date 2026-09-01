@@ -5,8 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ $title ?? config('app.name') }}</title>
-    {{-- One stylesheet. It carries the tokens, so a theme switch is a class on <html>, not a reload. --}}
+    {{-- The theme sheet carries the tokens, so a theme switch is a class on <html>, not a reload. The
+         pages sheet adds the utilities these screens use that the theme build does not emit. --}}
     <link rel="stylesheet" href="{{ asset('vui/vui.css') }}" />
+    <link rel="stylesheet" href="{{ asset('vui/vui-pages.css') }}" />
   </head>
   <body class="bg-background text-foreground">
     {{ $slot }}
